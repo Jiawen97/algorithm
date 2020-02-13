@@ -1,0 +1,387 @@
+\documentclass[twoside]{homework}
+
+\studname{Jiawen Huang (jh4179). Collaborators: A. Turing.}
+\studmail{jh4179@columbia.edu}
+\coursename{CSOR W4231: Analysis of Algorithms (sec.001)}
+\hwNo{1}
+
+\begin{document}
+\maketitle
+\section*{Problem 1}
+\subsection*{(a)}
+i. For all the comparison of elements $a_i$ and $a_j$, it must satisfy either $a_i<a_j$ or $ai\ge a_j$, which create the corresponding two branches. Since the binary tree makes comparison for each elements, all the permutations must appear as a leaf in the tree.
+\\ii. n!
+\\iii. nodes (the circles in the figure)
+\\iv. \textbf{\emph{Proof}} \quad Since each node in the tree can lead to at most two branches and there are d nodes in depth d, a binary tree of depth d has no more than $2^d$ leaves.
+\\v. Suppose we have x reachable leaves. According to ii. and iv., we have $n!\le x\le 2^d$, which implies $d\ge\log(n!)=\Omega(n\log n)$.
+\subsection*{(b)}
+We assume input array A has n elements with range D. We need array B to store the sorted output and array C to store the working area. First, we find the minimum value in array A, then we construct array C to contain the numbers of element in array A. We then change the element in Array C to be cumulative, which adds the original value and the value before it. Lastly, we put the value back to the sorted array B.
+\\\textbf{Correctness:} \quad
+\\ This is a modified counting sort, which is stable. No need to prove the correctness because the algorithm just counts the number of element in array A and puts them in order based on the value of the element.
+\\\textbf{Running Time:} \quad
+\\Finding the minimum value of input takes time $O(n)$. The for loop to initialize array C and the for loop to make C[i] contain the number of elements no more than i+min both take time $O(D)$. The for loop to make C[i] contain the number of elements equal to i+min and the for loop to put values back into the ordered array B both take time $O(n)$. Thus, the overall time is $O(n+D)$.
+\\\textbf{Space:} \quad
+\\This is not a in-place algorithm since we need extra space to store array B and C. The space complexity is also $O(n+D)$.
+\\\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{sort$(A,D)$}}
+	\begin{algorithmic}
+		\STATE //Find the minimum value min, initialized to A[1]
+		\FOR{$m=2$ to n}
+		\IF{$A[m]<min$}
+		\STATE $min=A[m]$
+		\ENDIF
+		\ENDFOR
+		\STATE Let C[0,1,...,D] be a new array, elements initialized to be 0
+		\FOR{$j=1$ to n} 
+		\STATE $C[A[j]-min]=C[A[j]-min]+1$
+		\ENDFOR
+		\STATE //C[i] now contains the number of elements equal to i+min
+		\FOR{$i=1$ to k} 
+		\STATE $C[i]=C[i]+C[i-1]$
+		\ENDFOR
+		\STATE //C[i] now contains the number of elements less than or equal to i+min
+		\FOR{$j=n$ to 1}
+		\STATE $B[C[A[j]-min]]=A[j]$
+		\STATE $C[A[j]-min]=C[A[j]-min]-1$
+		\ENDFOR
+		\RETURN B
+	\end{algorithmic}		
+\end{algorithm}
+\subsection*{(c)}
+No, because actually the modified counting sort if not a comparison-based sorting algorithm. It does not implement any comparison when sorting.
+\section*{Problem 2}
+We can use fast Walsh-Hadamard transform to design an algorithm, which is to use deivide and conquer method.
+\\\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{FWHT$(k,v)$}}
+	\begin{algorithmic}
+		\IF{k = 0}
+		\RETURN v
+		\ENDIF
+		\STATE $v_1 \leftarrow$ top half part of v
+		\STATE $v_2 \leftarrow$ bottom Half part of v
+		\STATE $A \leftarrow FWHT(k-1,v_1)$
+		\STATE $B \leftarrow FWHT(k-1,v_2)$
+		\STATE $result \leftarrow \begin{pmatrix}
+		A+B\\
+		A-B
+		\end{pmatrix}$
+		\RETURN result
+	\end{algorithmic}		
+\end{algorithm}
+\\\textbf{Correctness:} \quad
+\\\textbf{\emph{Base case:}}  n = $2^k$, k=0 then $H_0 v = v$ and the statement is true.
+\\\textbf{\emph{Induction hypothesis:}} assume that the statement is true for $k\ge 0$.
+\\\textbf{\emph{Inductive step:}} show it true for case k+1
+\\Since the $H_k v$ is computed correctly, $H_{k+1} v = \begin{pmatrix}
+H_{k} & H_{k}\\
+H_{k} & -H_{k} 
+\end{pmatrix}
+*\begin{pmatrix}
+v_{1}\\
+v_{2}
+\end{pmatrix}=\begin{pmatrix}
+H_{k}v_{1}+H_{k}v_{2}\\
+H_{k}v_{1}-H_{k}v_{2}
+\end{pmatrix}$
+is also computed correctly, which means the statement is also true in case k+1.
+\\\textbf{\emph{Conclusion:}} 
+it follows that the statement is true for $k\ge 0$.
+\\\textbf{Running Time:} \quad
+\\For each recursion, we convert the problem of $H_{k}v$ into $H_{k-1}v_{1}$ and $H_{k-1}v_{2}$ with additional additions or substractions, which take $O(1)$ time.\\
+Therefore:
+$$T(n)=2T(n/2)+O(n)\\$$
+According to Master Theorem:
+$$T(n)=O(n\log n)<O(n^2)$$
+where $n=2^k$, which is faster than the straightforward algorithm.
+\\\textbf{Space:} \quad
+\\The recursive algorithm needs to store extra variable of size $2^k$ for each recursion and the maximum depth of the recursive tree is k, so the space complexity is $O(k2^k)$, which is also equal to $O(n\log n)$. 
+\section*{Problem 3}
+\subsection*{(a)}
+We can use divide and conquer method and divide the problem into two subproblems and then combine them.\\
+\textbf{Pseudocode:}
+\begin{algorithm}
+	\caption*{\textbf{majority}(A)}
+	\begin{algorithmic}
+		\IF{$Length(A)=0$}
+		\RETURN None
+		\ENDIF
+		\IF{$Length(A)=1$}
+		\RETURN A
+		\ENDIF
+		\STATE $A_1 \leftarrow$ Array of the first $\lfloor n/2\rfloor$ elements of A
+		\STATE $A_2 \leftarrow$ Array of the rest elements in A after extracting $A_1$
+		\STATE $a_1 \leftarrow majority(A_1)$
+		\STATE $a_2 \leftarrow majority(A_2)$
+		\IF{$a_1=a_2=None$}
+		\RETURN None
+		\ELSIF{$a_1=a_2\neq None$}
+		\RETURN $a_1$
+		\ELSIF{$(a_1\neq None, a_2=None)$ or $(a_2\neq None, a1=None)$}
+		\STATE $value \leftarrow$ the not-None value in $a_1,a_2$
+		\STATE $num \leftarrow$ the amount of $a_1$ or $a_2$ in A
+		\IF{$num>\lfloor 1/2*Length(A)\rfloor$}
+		\RETURN value
+		\ENDIF
+		\RETURN None
+		\ELSE
+		\STATE //else condition deals with $a_1\neq None$, $a_2\neq None$, but $a_1\neq a_2$
+		\RETURN None
+		\ENDIF
+	\end{algorithmic}
+\end{algorithm}
+\\\textbf{Correctness:}\\
+As stated, the method is based on divide-conquer principle and find out the majority element by raising candidate value. If A has a majority element v, v must also be a majority element of A1 or A2 or both.\\
+If both parts have the same majority element, it is the majority element for A; if one of the parts has a majority element and the other part not, count the number of that element in A (taking O(n) time) to check if it is a majority element; if not the cases above, which means the two parts have different majority elements or both don't have majority elements, then A has no majority element.
+\\The correctness of this algorithm simply follows from the fact that if a majority exists in the array, it must exist in either the left or right halves as well. We then collect these majorities and check the entire array to verify that they are in fact majorities. 
+\textbf{Running Time:}
+\\A recurrence relation is T(n) = 2T(n/2) + O(n)\\
+According to Master Teorem:
+$$T(n)=O (n\log n)$$
+\textbf{Space:}\\
+The depth of the recursion tree is $\lceil \log n\rceil$ and each recursion step uses $O(n)$ space, so the space complexity should be $O(n\log n)$.
+\subsection*{(b)}
+I want to mimic the algorithm in (a) which is to get a candidate value first, but use another way of raising one instead of divide-and-conquer. We know that the occurrence of the majority element is more than the sum of the occurrence of other elements, so if we can pair every two different elements and discard the pair, what's left must be the majority element as long as there is one.
+\\\textbf{Correctness:}\\
+The correctness of the algorithm depends on the fact that if there is a majority element, the algorithm will always find it and let it to be the candidate value. We can prove it by proving the statement that if there is a majority element, we may miss that and choose another value as the candidate wrong. 
+\\Supposing that the majority element is m, m will appear more than half of the length(A) times. If the counter statement is true, we can assume we miss m and choose another one as the candidate. 
+\\Under this situation, since m is different from all the others values, they must be represented by different notation (one is -1 and the other is +1), so when we compare current candidate and the current value in working area, they will be offset. 
+\\However, if m is the majority element, there must be extra m values left in the array which are represented by -1 since the assumption is that we choose another value in the end. This makes no sense because when we terminate the for loop and return the candidate, the count is supposed to be positive. 
+\\Now we know if there is a majority element, the algorithm will always find it as the candidate.
+\\\textbf{Running Time:}\\
+The running time of the for loop to find candidate and the for loop to check if the candidate is a majority element are O(n). The running complexity is O(n).
+\\\textbf{Space:}\\
+The algorithm needs only O(1) extra space.
+\\\textbf{Pseudocode:}
+\begin{algorithm}
+	\caption*{\textbf{majority}(A)}
+	\begin{algorithmic}	
+		\STATE $n \leftarrow Length(A)$
+		\IF{n = 0}
+		\RETURN None
+		\ENDIF 
+		\STATE $cand=A[1]$
+		\STATE $count= 1$
+		\FOR{$i=2$ to n}
+		\IF{$cand = A[i]$}
+		\STATE //same numbers can't be paired, need to be stored to make a pair in the future
+		\STATE $count = count + 1$
+		\ELSE
+		\STATE //offset the previously stored number and discard a pair of different numbers
+		\STATE $count=count-1$
+		\ENDIF
+		\IF{$count = 0$}
+		\STATE //pairs all discarded and start to store a new number for pair use
+		\STATE $cand= A[i]$
+		\STATE $count= 1$
+		\ENDIF
+		\ENDFOR
+		\STATE //check if the candidate value is the majority element
+		\IF{$check(cand)>\lfloor n/2\rfloor$}
+		\RETURN cand
+		\ELSE
+		\RETURN None
+		\ENDIF
+	\end{algorithmic}	
+\end{algorithm}
+\begin{algorithm}
+	\caption*{\textbf{check}(cand)}
+	\begin{algorithmic}
+		\STATE $count=0$	
+		\FOR{$i=1$ to n}
+		\IF{$cand = A[i]$}
+		\STATE $count = count + 1$
+		\ENDIF
+		\ENDFOR
+		\RETURN count
+	\end{algorithmic}	
+\end{algorithm}
+\section*{Problem 4}
+\begin{center}
+%{\tabcolsep}{6mm}
+\setlength{\tabcolsep}{6mm}{
+\setlength{\extrarowheight}{6mm}{
+\begin{tabular}{ccccccc}
+	\hline
+	f&g&O&o&$\Omega$&$\omega$&$\Theta$\\
+	\hline
+	$n\log^2n$& $6n^2\log n$&yes &yes &no &no &no\\
+	$\sqrt{\log n}$& $(\log \log n)^3$&no &no &yes &yes &no\\
+	$4log n$& $nlog 4n$&yes &yes &no &no &no\\
+	$n^{3/5}$& $\sqrt{n}log n$&no &no &yes &yes &no\\
+	$5\sqrt{n}+\log n$& $2\sqrt{n}$&yes &no &yes &no &yes\\
+	$\frac{5^n}{n^8}$& $n^54^n$&no &no &yes &yes &no\\
+	$\sqrt{n}2^n$& $2^{n/2+\log n}$&no &no &yes &yes &no\\
+	$n\log 2n$& $\frac{n^2}{\log n}$&yes &yes &no &no &no\\
+	$n!$& $2^n$&no &no &yes &yes &no\\
+	$\log n!$& $\log n^n$&yes &no &yes &no &yes\\
+	\hline
+\end{tabular}}}
+\end{center}
+\section*{Problem 5}
+\subsection*{(a)}
+\textbf{Correctness:} \quad
+\\\textbf{\emph{Base case:}}  $F_6 = 8\ge 2^{6/2}$ and $F_7 = 13\ge 2^{7/2}$, then the statement is true for n=6 and n=7.
+\\\textbf{\emph{Induction hypothesis:}} assume that the statement is true for $n$ and $n+1$, $n\ge 6$.
+\\\textbf{\emph{Inductive step:}} show it true for case n+2
+\\Since $F_n\ge 2^{n/2}$ and $F_{n+1}\ge 2^{n+1/2}$,  
+\\$F_{n+2}=F_{n}+F_{n+1}\ge 2^{n/2}+ 2^{n+1/2}\ge 2^{n/2}+ 2^{n/2}=2^{n+2/2}$, which means the statement is also true in case n+2.
+\\\textbf{\emph{Conclusion:}} 
+it follows that the statement is true for $n\ge 6$.
+\subsection*{(b)}
+\subsubsection*{part 1} 
+\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{Fib}$(n)$}
+	\begin{algorithmic}
+		\IF{$n\le 1$}
+		\RETURN n
+		\ENDIF
+		\RETURN $Fib(n-1)+Fib(n-2)$
+	\end{algorithmic}		
+\end{algorithm}
+\\\textbf{Correctness:} \quad
+This is the definition and no need to prove it.
+\\\textbf{Running Time:} \quad
+\\$$T(n) = T(n-1)+T(n-2)+O(1)$$
+$$=2T(n-2)+T(n-3)+O(1)$$
+$$=3T(n-3)+2T(n-4)+O(1)$$
+$$=5T(n-3)+3T(n-4)+O(1)$$
+$$=...$$
+$$=F_{n-1}*T(1)+F_{n-2}*T(0)+O(1)$$
+According to textbook, $F_n$ is equal to $\lfloor\phi^n/\sqrt{5}+1/2\rfloor$, where $\phi=(1+\sqrt{5})/2$, so the running time is $\Theta(\phi^n)$, where $\phi=(1+\sqrt{5})/2$. Since $\phi<2$, the upper bound of running time is $O(2^n)$.\\
+\\According to (a), we know $F_{n-1}\ge 2^{n-1/2}$ and $F_{n-2}\ge 2^{n-2/2}$, so the lower bound of running time is $\Omega(2^{n/2})$.
+\\\textbf{Space:} \quad
+\\Since the Fib algorithm is a recursion tree, whose space depends on the depth of the recursion and each recursion needs O(1) space, the space complexity is O(n).
+\subsubsection*{part 2} 
+\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{Fib}$(n)$}
+	\begin{algorithmic}
+		\STATE $pre=0$
+		\STATE $cur=1$
+		\IF{$n\le 1$}
+		\RETURN n
+		\ENDIF
+		\FOR{$i=2$ to n}
+		\STATE $result=pre+cur$
+		\STATE $pre=cur$
+		\STATE $cur=result$
+		\ENDFOR
+		\RETURN result
+	\end{algorithmic}		
+\end{algorithm}
+\\\textbf{Correctness:} \quad
+This is the definition and no need to prove it.
+\\\textbf{Running Time:} \quad
+\\Since the for loop takes time O(n) and the extra addition and data movement operations take time O(1),
+$$T(n)=O(n)+O(1)=O(n)$$
+which means the time complexity is O(n).
+\\\textbf{Space:} \quad
+\\The algorithm needs constant variable, so the space complexity is O(1).
+\subsubsection*{part 3} 
+\textbf{Correctness:} \quad
+We need to prove $\begin{bmatrix}
+F_n&F_{n-1}\\
+F_{N-1}&F_{n-2}
+\end{bmatrix}=\begin{pmatrix}
+	1&1\\
+	1&0
+\end{pmatrix}^{n-1}$ is true for $n\ge 2$
+\\\textbf{\emph{Base case:}} the statement is true for n=2
+\\\textbf{\emph{Induction hypothesis:}} assume the statement is true for $n\ge 2$
+\\\textbf{\emph{Inductive step:}} show it true for n+1
+\\Since $\begin{bmatrix}
+F_n&F_{n-1}\\
+F_{n-1}&F_{n-2}
+\end{bmatrix}=\begin{pmatrix}
+1&1\\
+1&0
+\end{pmatrix}^{n-1}$, 
+\\$\begin{pmatrix}
+1&1\\
+1&0
+\end{pmatrix}^{n}=\begin{bmatrix}
+	F_n+F_{n-1}&F_n\\
+	F_{n-1}+F_{n-2}&F_{n-1}
+\end{bmatrix}=\begin{bmatrix}
+F_{n+1}&F_n\\
+F_{n}&F_{n-1}
+\end{bmatrix}$
+, which means the statement is also true in case n+1.
+\\\textbf{\emph{Conclusion:}} 
+it follows that the statement is true for $n\ge 2$.
+\\\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{Fib}$(n)$}
+	\begin{algorithmic}
+		\STATE $F=\begin{bmatrix}
+		1&1\\
+		1&0
+		\end{bmatrix}$
+		\IF{$n\le 1$}
+		\RETURN n
+		\ENDIF
+		\STATE $power(F,n-1)$ //calculate $F^{n-1}$
+		\STATE //return the first element in the top-left corner of the matrix
+		\RETURN $F[1][1]$		
+	\end{algorithmic}		
+\end{algorithm}
+\begin{algorithm}
+	\caption*{\textbf{power}$(F,n)$}
+	\begin{algorithmic}
+		\IF{n=1}		
+		\RETURN
+		\ENDIF
+		\STATE $M=\begin{bmatrix}
+		1&1\\
+		1&0
+		\end{bmatrix}$
+		\STATE $power(F, \lfloor n/2 \rfloor)$
+		\STATE $multiply(F, F)$ //now we get $F^n$ if n is even and $F^{n-1}$ if n is odd
+		\IF{i is odd}
+		\STATE $multiply(F,M)$
+		\ENDIF
+	\end{algorithmic}		
+\end{algorithm}
+\begin{algorithm}
+	\caption*{\textbf{multiply$(F,M)$}}
+	\begin{algorithmic}
+		\STATE $f1=F[1][1]*M[1][1]+F[1][2]*M[2][1]$
+		\STATE $f2=F[1][1]*M[1][2]+F[1][2]*M[2][2]$
+		\STATE $f3=F[2][1]*M[1][1]+F[2][2]*M[2][1]$
+		\STATE $f4=F[2][1]*M[1][2]+F[2][2]*M[2][2]$
+		\STATE $F=\begin{bmatrix}
+		f1&f2\\
+		f3&f4
+		\end{bmatrix}$	
+	\end{algorithmic}		
+\end{algorithm}
+\\\textbf{Running Time:} \quad
+\\For each step we convert the problem of $T(n)$ time into $T(n/2)$ time plus constant extra integer additions and multiplications taking $O(1)$ time, so we have
+$$T(n)=2T(n/2)+O(1)$$
+According to Master Teorem:
+$$T(n)=O (\log n)$$
+\textbf{Space:} \quad
+\\The depth of the recursion tree is $\log n$ and each recursion step takes $O(1)$ extra space, so the space complexity is $O(\log n)$.
+\subsection*{(c)}
+\subsubsection*{part 1} 
+We know that $F_n\ge 2^{n/2}$, so $F_n$ has $\lceil log_2F_n+1\rceil$ bits. The addition of $F_{n-1}$ and $F_{n-2}$ requires $\Theta(\lceil log_2F_{n-1}+1\rceil)$ time.
+\\$$T(n) = T(n-1)+T(n-2)+\Theta(\lceil log_2F_{n-1}+1\rceil)$$
+$$=2T(n-2)+\Theta(\lceil log_2F_{n-2}+1\rceil)+T(n-3)+\Theta(\lceil log_2F_{n-1}+1\rceil)$$
+$$=3T(n-3)+2\Theta(\lceil log_2F_{n-3}+1\rceil)+2T(n-4)+\Theta(\lceil log_2F_{n-2}+1\rceil)+\Theta(\lceil log_2F_{n-1}+1\rceil)$$
+$$=...$$
+$$=F_{n-1}*T(1)+F_{n-2}*T(0)+\sum_{i=1}^{n-1}F_{i}*\Theta(\lceil log_2F_{n-i}+1\rceil)$$
+The upper bound of running time is $O(n\phi^n)$, where $\phi=(1+\sqrt{5})/2$.
+\subsubsection*{part 2}
+The running time will be $$T(n)=O(n)+\sum_{i=1}^{n-1}\Theta(\lceil log_2F_{i}+1\rceil)$$
+$$\le O(n)+\sum_{i=1}^{n-1}c*i*log_2\phi$$
+$$=O(n) +O(n^2)=O(n^2)$$.
+\subsubsection*{part 3} 
+The running time will be 
+$$T(n)=T(n/2)+\Theta(\lceil log_2F_{\lfloor n-1/2\rfloor}+1\rceil^2)$$
+$$\le T(n/2)+c*log_2\phi*(n/2)^2$$
+$$=T(n/2)+O(n^2)$$
+\\According to master theorem, $$T(n)=O(n^2)$$.
+\end{document} 
