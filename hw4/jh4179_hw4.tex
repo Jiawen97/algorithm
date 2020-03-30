@@ -1,0 +1,140 @@
+\documentclass[twoside]{homework}
+
+\studname{Jiawen Huang (jh4179). Collaborators: A. Turing.}
+\studmail{jh4179@columbia.edu}
+\coursename{CSOR W4231: Analysis of Algorithms (sec.001)}
+\hwNo{4}
+
+\begin{document}
+\maketitle
+
+\section*{Problem 1}
+We can use BFS for this problem because BFS gives us connectivity condition. We can first delete edge e, which we denote by e(u,v) and then use BFS to check if v is reachable for u without edge e in the graph.
+\\\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{Cycle$(G,e)$}}
+	\begin{algorithmic}
+		\STATE delete edge e(u,v) in G
+		\STATE BFS(u) 
+		\IF{v is in the tree}
+		\RETURN yes
+		\ELSE 
+		\RETURN no
+		\ENDIF
+	\end{algorithmic}		
+\end{algorithm}
+\\\textbf{Correctness:} 
+\\If there is a cycle which contains edge e(u,v), from u we can at least have two way to get to v. One is directly from e, and the other one is without e, so the algorithm is to check whether the second way exists or not.
+\\\textbf{Running Time:} \quad
+\\The algorithm only needs to do a BFS which takes $O(m+n)$, so the running complexity is $O(m+n)$.
+\\\textbf{Space:} \quad
+\\The space complexity is $O(n)$ which is the same as BFS.
+
+
+\section*{Problem 2}
+First, we use DFS to divide the graph into different strongly connected components (SCCs). For each SCC, we use BFS to check if it is bipartite. If it is, then it does not have odd-length cycle, otherwise, it has odd-length cycle.
+\\\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{OddLengthCycle$(G)$}}
+	\begin{algorithmic}
+		\STATE SCCs=SCC(G)
+		\FOR{SCC in SCCs} 
+		\STATE test bipartiteness
+		\IF{SCC is not bipartite}
+		\RETURN yes 
+		\ENDIF
+		\ENDFOR
+		\RETURN no
+	\end{algorithmic}		
+\end{algorithm}
+\\\textbf{Correctness:} 
+\\We have proved in the class, if a connected graph G contains an odd-length cycle, then it is not 2-colorable, which means no bipartiteness.   
+\\\textbf{Running Time:} \quad
+\\The algorithm needs to take $O(m+n)$ time to find SCCs and do BFS to 2-color different SCCs of graph G which also takes $O(m+n)$ and  so the running complexity is $O(m+n)$.
+\\\textbf{Space:} \quad
+\\The space complexity is $O(n)$ to store SCCs and extra variables in BFS and DFS.
+
+\section*{Problem 3}
+\subsection*{a}
+We can find the cost of a node by find its reachable nodes with minimum price. First, we need to use TopologicalOrder to find the topological order of DAG and for each node its reachable nodes must fall behind it or be itself.
+\\\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{DAGcost$(G,p)$}}
+	\begin{algorithmic}
+		\STATE Order=TopologicalOrder(G)
+		\FOR{u in Order(-1) to Order(1)} 
+		\STATE which is in reverse order
+		\STATE $cost[u]=min\{p_u,p_v\}$ for every $(u,v)\in E$
+		\ENDFOR
+	\end{algorithmic}		
+\end{algorithm}
+\\\textbf{Correctness:} 
+\\It's obviously true if when we know the definition of topological order. Topological order of DAG is for every $(u,v)\in E$, u is put ahead of v, so any reachable nodes of u will be put behind u in the topological order of DAG.
+\\\textbf{Running Time:} \quad
+\\The algorithm needs to take $O(m+n)$ time to find topological order and take $O(m+n)$ to fill the values in cost so the running complexity is $O(m+n)$.
+\\\textbf{Space:} \quad
+\\The space complexity is $O(n)$ to store variable Order.
+
+\subsection*{b}
+For all directed graph, what we need to do is find all the SCCs of G. For each SCC, since the nodes in it are reachable for all the other nodes, so all the cost of nodes in it is at least the minimum price of them. We can see them as a group in this problem.
+\\\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{DGcost$(G,p)$}}
+	\begin{algorithmic}
+		\STATE SCCs=SCC(G)
+		\FOR{SCC in SCCs} 
+		\STATE $p_{SCC}=min{p_u}$ for any $u\in SCC$
+		\ENDFOR
+		\STATE see each SCC as a node and draw the edges among them based on G to form $G'$
+		\STATE DAGcost($G'$)
+		\STATE cost[u]=cost[SCC] for any $u\in SCC$
+	\end{algorithmic}		
+\end{algorithm}
+\\\textbf{Correctness:} 
+\\The definition of SCC means for each nodes in SCC it can reach all the others and also all the other nodes can reach it, so obviously they will have the same cost. If we see each SCC as a new node, the problem will be the same as part (a).
+\\\textbf{Running Time:} \quad
+\\The algorithm needs to take O(m+n) time to find SCCs, form $G'$ and run DAGcost. It also needs to take O(n) time to distribute price of each SCC and costs of each node in the last step, so the running complexity is $O(m+n)$.
+\\\textbf{Space:} \quad
+\\The algorithm needs $O(n)$ to store SCCs and $p_{SCC}$ and $O(m+n)$ to $G'$, so the space complexity is $O(m+n)$.
+
+\section*{Problem 4}
+We only to do some minor adjustment to the Dijkstra's algorithm.
+\\\textbf{Pseudocode:} \quad
+\begin{algorithm}
+	\caption*{\textbf{best$(G,V,w)$}}
+	\begin{algorithmic}
+		\STATE Initialize(G,s), best
+		\STATE Q=BuildQueue({V;dist})
+		\STATE S=$empty$
+		\WHILE{$S\neq empty$}
+		\STATE u=ExtractMin(Q)
+		\STATE $S=S\cup u$
+		\FOR{$(u,v)\in E$}
+		\STATE Update(u, v)
+		\ENDFOR
+		\ENDWHILE
+	\end{algorithmic}		
+\end{algorithm}
+\begin{algorithm}
+	\caption*{\textbf{Update$(u,v)$}}
+	\begin{algorithmic}
+		\IF{$dist[v]>dist[u]+w_{uv}$}
+		\STATE $dist[v]=dist[u]+w_{uv}$
+		\STATE $prev[v]=u$
+		\STATE $best[v]=best[u]+1$
+		\ENDIF
+		\IF{$dist[v]=dist[u]+w_{uv}$}
+		\IF{$best[v]>best[u]+1$}
+		\STATE $best[v]=best[u]+1$
+		\ENDIF
+		\ENDIF
+	\end{algorithmic}		
+\end{algorithm}
+\\\textbf{Correctness:} 
+\\Correctness of this algorithm is the same as what we proved in Dijkstra's algorithm.  
+\\\textbf{Running Time:} \quad
+\\The algorithm needs to take $O(m\log n)$ time, which is the same as Dijkstra's algorithm implemented by priority queue method.
+\\\textbf{Space:} \quad
+\\The space complexity is $O(n)$ to store extra variables.
+
+\end{document} 
